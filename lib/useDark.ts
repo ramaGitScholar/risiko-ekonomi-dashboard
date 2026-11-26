@@ -1,15 +1,33 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-// Mengikuti preferensi warna sistem; dipakai untuk warna yang dihitung di JS (peta, grafik).
-export function useDark() {
-  const [dark, setDark] = useState(false);
+import { THEME_KEY as KEY } from './theme';
+
+// Tema mengikuti preferensi sistem sampai pengguna memilih sendiri lewat tombol.
+// Pilihan disimpan di localStorage dan dipasang sebagai <html data-theme="...">
+// (skrip kecil di app/layout.tsx memasangnya sebelum halaman tampil agar tidak berkedip).
+export function useTheme(): [boolean, (dark: boolean) => void] {
+  const [dark, setDarkState] = useState(false);
+
   useEffect(() => {
+    const root = document.documentElement;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const on = () => setDark(mq.matches);
-    on();
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
+    const sync = () => {
+      const t = root.dataset.theme;
+      setDarkState(t === 'dark' || (t !== 'light' && mq.matches));
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
   }, []);
-  return dark;
+
+  const setDark = useCallback((d: boolean) => {
+    const t = d ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem(KEY, t); } catch { /* penyimpanan diblokir: tema tetap berlaku untuk sesi ini */ }
+    setDarkState(d);
+  }, []);
+
+  return [dark, setDark];
 }
+

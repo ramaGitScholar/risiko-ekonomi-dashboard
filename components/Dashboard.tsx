@@ -11,7 +11,7 @@ import TopFive from './TopFive';
 import { buildProvinces } from '@/lib/data';
 import { QUAD_COLOR, diverging, seqBlue, seqOrange } from '@/lib/colors';
 import { QUADRANT_INFO, computeIndices, f1, f2, type Quadrant } from '@/lib/indices';
-import { useDark } from '@/lib/useDark';
+import { useTheme } from '@/lib/useDark';
 
 type Tab = 'ringkasan' | 'peta' | 'stress' | 'kamus';
 type Metric = 'risk' | 'evi' | 'eri' | 'quad';
@@ -37,7 +37,7 @@ const NAV: { id: Tab; label: string; hint: string; icon: ReactNode }[] = [
 ];
 
 export default function Dashboard() {
-  const dark = useDark();
+  const [dark, setDark] = useTheme();
   const [tab, setTab] = useState<Tab>('ringkasan');
   const [metric, setMetric] = useState<Metric>('quad');
   const [winsor, setWinsor] = useState(false);
@@ -80,7 +80,7 @@ export default function Dashboard() {
   return (
     <div className="shell">
       <aside className="side">
-        <div className="brand">
+        <a className="brand" href="/" title="Kembali ke halaman Ringkasan" onClick={(e) => { e.preventDefault(); setTab('ringkasan'); }}>
           <span className="brand-mark" aria-hidden>
             <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="currentColor" /></svg>
           </span>
@@ -88,7 +88,7 @@ export default function Dashboard() {
             <b>Indeks Risiko Ekonomi</b>
             <span>Provinsi Indonesia</span>
           </div>
-        </div>
+        </a>
         <nav className="side-nav" aria-label="Halaman">
           {NAV.map((n) => (
             <button key={n.id} aria-current={tab === n.id ? 'page' : undefined} className={tab === n.id ? 'on' : ''} onClick={() => setTab(n.id)}>
@@ -97,6 +97,14 @@ export default function Dashboard() {
             </button>
           ))}
         </nav>
+        <div className="theme-switch" role="group" aria-label="Tema tampilan">
+          <button aria-pressed={!dark} className={!dark ? 'on' : ''} onClick={() => setDark(false)} title="Mode terang">
+            <Icon d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" /><span>Terang</span>
+          </button>
+          <button aria-pressed={dark} className={dark ? 'on' : ''} onClick={() => setDark(true)} title="Mode gelap">
+            <Icon d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" /><span>Gelap</span>
+          </button>
+        </div>
         <div className="side-foot">
           <span className="pill">Prototipe</span>
           <p>Data sintetis, bukan data resmi. Batas 34 provinsi sebelum pemekaran Papua 2022.</p>
@@ -105,7 +113,7 @@ export default function Dashboard() {
 
       <div className="content">
         {tab === 'ringkasan' && (
-          <Overview res={res} features={features} mapStatus={mapStatus} onRetry={retry} dark={dark} onPick={openProv} />
+          <Overview res={res} dark={dark} onPick={openProv} />
         )}
 
         {tab === 'peta' && (
@@ -117,7 +125,7 @@ export default function Dashboard() {
               points={[
                 { title: 'Peta', body: 'Pilih ukuran yang diwarnai: risiko, kerentanan, ketahanan, atau kuadran. Arahkan kursor untuk melihat angka, klik untuk membuka rincian provinsi di panel kanan.' },
                 { title: 'Matriks kuadran', body: 'Diagram V&R (vulnerability–resilience) dari Briguglio. Sumbu tegak = kerentanan, sumbu datar = ketahanan, garis putus-putus = rata-rata antarprovinsi. Karena kerentanan bersifat bawaan, kebijakan hanya bisa menggeser provinsi secara mendatar: dari Worst-case ke Self-made, atau dari Prodigal son ke Best-case.' },
-                { title: 'Peringkat', body: 'Lima provinsi dengan risiko tertinggi dan terendah, disusul tabel lengkap 34 provinsi yang bisa diurutkan.' },
+                { title: 'Peringkat', body: 'Lima provinsi dengan risiko tertinggi dan terendah (kiri bawah), serta tabel lengkap 34 provinsi yang bisa diurutkan dan digulir (kanan).' },
               ]}
             />
             <main className="grid cols">
@@ -192,19 +200,20 @@ export default function Dashboard() {
                 />
               </section>
 
+              <section className="card">
+                <h2>Top 5 risiko tertinggi dan terendah</h2>
+                <p className="note">Klik nama provinsi untuk menampilkan rinciannya di panel kanan.</p>
+                <TopFive rows={res.rows} dark={dark} onPick={(k) => { setSelected(k); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+              </section>
               </div>
-              <div className="col">
+              <div className="col fill">
               <section className="card detail-card" aria-live="polite">
                 <DetailPanel row={row} dark={dark} />
               </section>
 
-              <section className="card rank-card">
-                <h2>Top 5 risiko tertinggi dan terendah</h2>
-                <p className="note">Klik nama provinsi untuk menampilkan rinciannya di panel atas.</p>
-                <TopFive rows={res.rows} dark={dark} onPick={(k) => { setSelected(k); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
-
-                <div className="card-head rank-head">
-                  <h2>Peringkat lengkap</h2>
+              <section className="card rank-card fit">
+                <div className="card-head">
+                  <h2>Peringkat lengkap {res.rows.length} provinsi</h2>
                   <label className="opts">Urutkan{' '}
                     <select value={sort} onChange={(e) => setSort(e.target.value as 'risk' | 'evi' | 'eri')}>
                       <option value="risk">risiko tertinggi</option>
@@ -213,7 +222,8 @@ export default function Dashboard() {
                     </select>
                   </label>
                 </div>
-                <div className="table-scroll tall">
+                <p className="note">Gulir tabel untuk melihat semua provinsi; klik baris untuk menampilkan rinciannya di panel atas.</p>
+                <div className="table-scroll fit-body">
                   <table>
                     <thead><tr><th className="num">#</th><th>Provinsi</th><th className="num">EVI</th><th className="num">ERI</th><th className="num">Risiko</th><th>Kuadran</th></tr></thead>
                     <tbody>
@@ -242,7 +252,19 @@ export default function Dashboard() {
         {tab === 'kamus' && <Catalog />}
 
         <footer className="foot">
-          Skala {f1(0, 0)}–1 per indikator (min–max antarprovinsi{winsor ? ', dipotong di persentil 5 dan 95' : ''}). Bobot sama kecuali dinyatakan lain di kamus variabel. Seluruh angka adalah data sintetis.
+          <p className="foot-note">
+            Skala {f1(0, 0)}–1 per indikator (min–max antarprovinsi{winsor ? ', dipotong di persentil 5 dan 95' : ''}). Bobot sama kecuali dinyatakan lain di kamus variabel. Seluruh angka adalah data sintetis.
+          </p>
+          {/* TEMPLATE: ganti nama lembaga, tahun, dan tautan di bawah sebelum dipublikasikan. */}
+          <div className="copyright">
+            <span>© {new Date().getFullYear()} [Nama Lembaga]. Hak cipta dilindungi undang-undang.</span>
+            <nav aria-label="Tautan kaki halaman">
+              <a href="#">Tentang</a>
+              <a href="#">Kontak</a>
+              <a href="#">Kebijakan privasi</a>
+              <a href="#">Syarat penggunaan</a>
+            </nav>
+          </div>
         </footer>
       </div>
     </div>

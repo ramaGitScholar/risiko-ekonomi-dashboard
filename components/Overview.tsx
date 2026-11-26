@@ -1,6 +1,4 @@
 'use client';
-import MapView, { type Feat, type MapStatus } from './MapView';
-import TopFive from './TopFive';
 import Illustration from './Illustration';
 import PageIntro from './PageIntro';
 import { QUAD_COLOR } from '@/lib/colors';
@@ -46,14 +44,13 @@ const SOURCES = [
   ['Badan Pangan Nasional', 'Neraca pangan dan pasokan antarprovinsi'],
 ];
 
-export default function Overview({ res, features, mapStatus, onRetry, dark, onPick }: {
-  res: Result; features: Feat[]; mapStatus: MapStatus; onRetry: () => void; dark: boolean; onPick: (kode: number) => void;
+export default function Overview({ res, dark, onPick }: {
+  res: Result; dark: boolean; onPick: (kode: number) => void;
 }) {
   const n = res.rows.length;
   const avg = (f: (r: Result['rows'][number]) => number) => res.rows.reduce((s, r) => s + f(r), 0) / n;
   const counts = QUADS.map((q) => ({ q, n: res.rows.filter((r) => r.quadrant === q).length }));
   const byRisk = [...res.rows].sort((a, b) => b.risk - a.risk);
-  const byKode = new Map(res.rows.map((r) => [r.prov.kode, r]));
   const avgRisk = avg((r) => r.risk);
 
   return (
@@ -61,11 +58,11 @@ export default function Overview({ res, features, mapStatus, onRetry, dark, onPi
       <PageIntro
         kicker="Halaman 1 · Ringkasan"
         title="Ringkasan dan profil dasbor"
-        lead={<>Gambaran umum risiko ekonomi 34 provinsi dalam satu layar: kartu skor, provinsi dengan risiko tertinggi dan terendah, definisi yang dipakai, serta rujukan metodologinya. Kerangka dan definisinya mengikuti Briguglio dkk. (2008) dan Briguglio (2016). Mulai dari sini sebelum masuk ke peta dan simulasi.</>}
+        lead={<>Gambaran umum risiko ekonomi 34 provinsi dalam satu layar: definisi yang dipakai, kartu skor, sebaran provinsi per kuadran, profil dasbor, serta rujukan metodologinya. Kerangka dan definisinya mengikuti Briguglio dkk. (2008) dan Briguglio (2016). Mulai dari sini sebelum masuk ke peta dan simulasi.</>}
         points={[
           { title: 'Apa yang diukur', body: 'Risiko suatu perekonomian dirugikan oleh guncangan eksternal, yaitu pertemuan antara seberapa terpapar strukturnya (kerentanan) dan seberapa mampu kebijakannya menghadapi guncangan (ketahanan).' },
           { title: 'Cara membaca skor', body: <>Risiko = EVI − ERI. Kerentanan <b>menambah</b> risiko, ketahanan <b>mengurangi</b> risiko. Nilai positif berarti paparan lebih besar dari kemampuan menghadapinya.</> },
-          { title: 'Langkah berikutnya', body: 'Klik nama provinsi mana pun di halaman ini untuk membuka rinciannya di halaman Peta dan kuadran.' },
+          { title: 'Langkah berikutnya', body: 'Buka halaman Peta dan kuadran untuk melihat posisi tiap provinsi, lima provinsi dengan risiko tertinggi dan terendah, serta rincian per provinsi. Kartu skor risiko tertinggi dan terendah di bawah juga bisa diklik.' },
         ]}
       />
 
@@ -82,10 +79,10 @@ export default function Overview({ res, features, mapStatus, onRetry, dark, onPi
             Briguglio memecah risiko ini menjadi dua unsur yang saling berlawanan.<sup>[1][2]</sup>
           </p>
           <div className="formula" aria-label="Risiko sama dengan kerentanan dikurangi ketahanan">
-            <div className="f-box evi"><b>Kerentanan</b><span>EVI · paparan · menambah risiko</span></div>
-            <span className="f-op">−</span>
-            <div className="f-box eri"><b>Ketahanan</b><span>ERI · kemampuan menghadapi · mengurangi risiko</span></div>
-            <span className="f-op">=</span>
+            <div className="f-box evi"><b>Kerentanan <em>EVI</em></b><span>paparan, menambah risiko</span></div>
+            <span className="f-op" aria-hidden>−</span>
+            <div className="f-box eri"><b>Ketahanan <em>ERI</em></b><span>daya hadapi, mengurangi risiko</span></div>
+            <span className="f-op" aria-hidden>=</span>
             <div className="f-box risk"><b>Risiko</b><span>dirugikan guncangan eksternal</span></div>
           </div>
           <ul className="defs">
@@ -107,9 +104,17 @@ export default function Overview({ res, features, mapStatus, onRetry, dark, onPi
             berkat kebijakan yang membangun ketahanan.<sup>[1]</sup> Pesan yang sama berlaku bagi provinsi: kerentanan adalah kondisi, ketahanan adalah pilihan kebijakan.
           </p>
         </div>
-        <div className="hero-art">
+        <figure className="hero-art">
           <Illustration />
-        </div>
+          <figcaption>
+            <span className="kicker">Cara membaca gambar</span>
+            <ul className="legend-illu">
+              <li><i className="li-shock" /><span><b>Gelombang merah</b> adalah guncangan eksternal: harga komoditas, iklim, dan logistik antarpulau.</span></li>
+              <li><i className="li-land" /><span><b>Pulau dan kotanya</b> adalah perekonomian daerah. Makin terbuka dan terkonsentrasi strukturnya, makin besar <b>kerentanannya</b>.</span></li>
+              <li><i className="li-shield" /><span><b>Perisai</b> adalah ketahanan hasil kebijakan, yang meredam atau melawan guncangan sebelum menjadi kerugian.</span></li>
+            </ul>
+          </figcaption>
+        </figure>
       </section>
 
       <section className="card">
@@ -122,8 +127,8 @@ export default function Overview({ res, features, mapStatus, onRetry, dark, onPi
           <div className="kpi"><span>Rata-rata kerentanan (EVI)</span><b>{f2(avg((r) => r.evi))}</b><em>skala 0–1, tinggi = rentan</em></div>
           <div className="kpi"><span>Rata-rata ketahanan (ERI)</span><b>{f2(avg((r) => r.eri))}</b><em>skala 0–1, tinggi = tahan</em></div>
           <div className="kpi"><span>Rata-rata risiko</span><b>{avgRisk > 0 ? '+' : ''}{f2(avgRisk)}</b><em>EVI − ERI</em></div>
-          <div className="kpi warn"><span>Risiko tertinggi</span><b className="kpi-name">{byRisk[0].prov.nama}</b><em>{byRisk[0].risk > 0 ? '+' : ''}{f2(byRisk[0].risk)}</em></div>
-          <div className="kpi good"><span>Risiko terendah</span><b className="kpi-name">{byRisk[n - 1].prov.nama}</b><em>{f2(byRisk[n - 1].risk)}</em></div>
+          <button className="kpi warn kpi-link" onClick={() => onPick(byRisk[0].prov.kode)} title="Buka rincian di halaman Peta dan kuadran"><span>Risiko tertinggi</span><b className="kpi-name">{byRisk[0].prov.nama}</b><em>{byRisk[0].risk > 0 ? '+' : ''}{f2(byRisk[0].risk)} · lihat rincian →</em></button>
+          <button className="kpi good kpi-link" onClick={() => onPick(byRisk[n - 1].prov.kode)} title="Buka rincian di halaman Peta dan kuadran"><span>Risiko terendah</span><b className="kpi-name">{byRisk[n - 1].prov.nama}</b><em>{f2(byRisk[n - 1].risk)} · lihat rincian →</em></button>
         </div>
 
         <h3>Sebaran provinsi per kuadran</h3>
@@ -148,37 +153,10 @@ export default function Overview({ res, features, mapStatus, onRetry, dark, onPi
         </p>
       </section>
 
-      <div className="grid start">
-        <section className="card">
-          <h2>Peringkat ekstrem</h2>
-          <p className="note">Diurutkan menurut skor risiko (EVI − ERI). Angka kecil di kiri adalah peringkat dari {n} provinsi; klik untuk melihat rinciannya.</p>
-          <TopFive rows={res.rows} dark={dark} onPick={onPick} />
-        </section>
-        <section className="card">
-          <h2>Peta sebaran kuadran</h2>
-          <p className="note">Warna merah menandakan kerentanan tinggi, biru rendah; warna gelap berarti ketahanan rendah.</p>
-          <MapView
-            features={features}
-            status={mapStatus}
-            onRetry={onRetry}
-            fill={(k) => { const r = byKode.get(k); return r ? QUAD_COLOR(r.quadrant, dark) : 'var(--map-nodata)'; }}
-            selected={-1}
-            onSelect={onPick}
-            nameOf={(k) => byKode.get(k)?.prov.nama ?? ''}
-            tip={(k) => { const r = byKode.get(k); return r ? (<><b>{r.prov.nama}</b><div>Risiko {r.risk > 0 ? '+' : ''}{f2(r.risk)}</div><div>{QUADRANT_INFO[r.quadrant].nama}</div></>) : null; }}
-          />
-          <ul className="legend-quad">
-            {counts.map(({ q }) => (
-              <li key={q}><i style={{ background: QUAD_COLOR(q, dark) }} /><b>{QUADRANT_INFO[q].nama}</b></li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
       <div className="grid">
-        <section className="card">
+        <section className="card fit">
           <h2>Profil dasbor</h2>
-          <dl className="profile">
+          <dl className="profile fit-body">
             <div><dt>Tujuan</dt><dd>Memetakan provinsi mana yang paling terpapar guncangan ekonomi dan seberapa jauh kebijakan daerah mampu meredamnya, sebagai bahan prioritas kebijakan dan peringatan dini.</dd></div>
             <div><dt>Cakupan</dt><dd>34 provinsi (batas wilayah sebelum pemekaran Papua 2022).</dd></div>
             <div><dt>Kerangka</dt><dd>Kerangka kerentanan–ketahanan (<i>V&amp;R framework</i>) Briguglio dkk. (2008) dalam versi revisi Briguglio (2016), diturunkan dari tingkat negara ke tingkat provinsi.</dd></div>

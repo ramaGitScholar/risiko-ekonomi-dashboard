@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '@fontsource-variable/instrument-sans';
 import '@fontsource-variable/newsreader';
 import './globals.css';
+import { THEME_INIT } from '@/lib/theme';
 
 export const metadata: Metadata = {
   title: 'Indeks Risiko Ekonomi Provinsi',
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

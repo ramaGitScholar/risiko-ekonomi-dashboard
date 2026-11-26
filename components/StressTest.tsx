@@ -38,7 +38,8 @@ export default function StressTest({ base, features, mapStatus, onRetry, selecte
   const maxD = Math.max(0.001, ...rows.map((r) => r.dRisk));
   const moved = rows.filter((r) => r.qAfter !== r.qBase);
   const toWorst = moved.filter((r) => r.qAfter === 'worst');
-  const top = [...rows].sort((a, b) => b.dRisk - a.dRisk).slice(0, 10);
+  const ranked = useMemo(() => [...rows].sort((a, b) => b.dRisk - a.dRisk), [rows]);
+  const top = ranked.slice(0, 10);
   const none = rows.every((r) => r.dRisk < 1e-6);
 
   return (
@@ -55,6 +56,7 @@ export default function StressTest({ base, features, mapStatus, onRetry, selecte
         ]}
       />
     <div className="stress">
+      <div className="col fill">
       <section className="card controls-card">
         <h2>Skenario guncangan</h2>
         <p className="note">Pilih skenario siap pakai, atau geser pengatur untuk menyusun guncangan sendiri. Angka negatif pada harga berarti harga turun.</p>
@@ -71,6 +73,36 @@ export default function StressTest({ base, features, mapStatus, onRetry, selecte
         <Slider label="Gangguan logistik antar-pulau" value={s.logistik} min={0} max={100} unit="" onChange={(v) => setS({ ...s, logistik: v })} />
         <p className="note">Koefisien dampak adalah heuristik ilustratif dan belum dikalibrasi. Ganti dengan elastisitas hasil estimasi sebelum dipakai untuk keputusan.</p>
       </section>
+
+      <section className="card fit impact-card">
+        <h2>Dampak per provinsi</h2>
+        <p className="note">Seluruh {rows.length} provinsi, diurutkan dari kenaikan risiko terbesar. Gulir untuk melihat semuanya; klik untuk menyorot di peta dan matriks.</p>
+        <ol className="impact fit-body">
+          {ranked.map((r, i) => {
+            const hit = r.dRisk >= ZERO;
+            return (
+              <li key={r.kode}>
+                <button className={'impact-row' + (r.kode === selected ? ' sel' : '')} onClick={() => onSelect(r.kode)}>
+                  <span className="impact-rank">{i + 1}</span>
+                  <span className="impact-name">
+                    <b>{r.nama}</b>
+                    {r.qAfter !== r.qBase
+                      ? <em className="moved">{QUADRANT_INFO[r.qBase].nama} → {QUADRANT_INFO[r.qAfter].nama}</em>
+                      : <em>{QUADRANT_INFO[r.qBase].nama}</em>}
+                  </span>
+                  <span className="top5-bar" aria-hidden>
+                    <span style={{ width: `${hit ? 100 * Math.min(1, r.dRisk / maxD) : 0}%`, background: seqOrange(0.18 + 0.82 * Math.min(1, r.dRisk / maxD), dark) }} />
+                  </span>
+                  <span className="impact-val">{hit ? '+' + f2(r.dRisk) : '0'}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+      </div>
+
+      <div className="col">
 
       <section className="card summary-card">
         <h2>Hasil</h2>
@@ -135,6 +167,8 @@ export default function StressTest({ base, features, mapStatus, onRetry, selecte
           }))}
         />
       </section>
+      </div>
+    </div>
 
       <section className="card">
         <h2>Sepuluh provinsi paling terdampak</h2>
@@ -158,7 +192,6 @@ export default function StressTest({ base, features, mapStatus, onRetry, selecte
           </table>
         </div>
       </section>
-    </div>
     </div>
   );
 }
