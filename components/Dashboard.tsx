@@ -257,7 +257,7 @@ export default function Dashboard() {
           </p>
           {/* TEMPLATE: ganti nama lembaga, tahun, dan tautan di bawah sebelum dipublikasikan. */}
           <div className="copyright">
-            <span>© {new Date().getFullYear()} [Nama Lembaga]. Hak cipta dilindungi undang-undang.</span>
+            <span>© {new Date().getFullYear()} Klaster Riset Ketahanan & Keamanan &middot; Sekolah Kajian Stratejik dan Global (SKSG) Universitas Indonesia. All rights reserved.</span>
             <nav aria-label="Tautan kaki halaman">
               <a href="#">Tentang</a>
               <a href="#">Kontak</a>
