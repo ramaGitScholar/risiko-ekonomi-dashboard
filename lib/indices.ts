@@ -22,10 +22,10 @@ export type Indicator = {
 };
 
 export const EVI_IND: Indicator[] = [
-  { id: 'opn', label: 'Keterbukaan perdagangan', unit: '% PDRB', dir: 'high', group: 'Keterbukaan', source: 'BPS', catatan: '(Ekspor + impor) / PDRB. Tambahkan perdagangan antarwilayah bila tersedia.' },
-  { id: 'exn', label: 'Konsentrasi ekspor', unit: '% ekspor', dir: 'high', group: 'Konsentrasi', source: 'BPS', catatan: 'Porsi 3 kelompok HS terbesar. Pakai provinsi asal barang, bukan pelabuhan.' },
-  { id: 'dsi', label: 'Ketergantungan impor strategis', unit: '% impor', dir: 'high', group: 'Impor strategis', source: 'BPS, Badan Pangan Nasional', catatan: 'Impor pangan + energi / total impor.' },
-  { id: 'dpr', label: 'Kerugian bencana', unit: '% PDRB', dir: 'high', group: 'Bencana', source: 'BNPB (DIBI/IRBI)', catatan: 'Rata-rata 10 tahun untuk meredam lonjakan.' },
+  { id: 'opn', label: 'Keterbukaan perdagangan', unit: '% PDRB', dir: 'high', group: 'Keterbukaan', source: 'BPS', catatan: 'Briguglio (2016): (ekspor + impor) / 2, dibagi PDB. Untuk provinsi, tambahkan perdagangan antarwilayah bila tersedia.' },
+  { id: 'exn', label: 'Konsentrasi ekspor', unit: '% ekspor', dir: 'high', group: 'Konsentrasi', source: 'BPS', catatan: 'Briguglio (2016): porsi tiga kelompok besar ekspor barang dan jasa terbesar dalam total ekspor. Pakai provinsi asal barang, bukan pelabuhan.' },
+  { id: 'dsi', label: 'Ketergantungan impor strategis', unit: '% impor', dir: 'high', group: 'Impor strategis', source: 'BPS, Badan Pangan Nasional', catatan: 'Briguglio (2016): impor pangan + bahan bakar sebagai % total impor barang. Permintaannya tidak elastis, sehingga memperkuat paparan.' },
+  { id: 'dpr', label: 'Kerugian bencana', unit: '% PDRB', dir: 'high', group: 'Bencana', source: 'BNPB (DIBI/IRBI)', catatan: 'Briguglio (2016): kerusakan ekonomi akibat bencana relatif terhadap PDB. Dirata-ratakan 10 tahun untuk meredam lonjakan.' },
 ];
 
 export const ERI_IND: Indicator[] = [

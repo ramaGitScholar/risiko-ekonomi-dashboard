@@ -1,9 +1,10 @@
 'use client';
 import { useMemo, useState } from 'react';
-import MapView, { type Feat } from './MapView';
+import MapView, { type Feat, type MapStatus } from './MapView';
 import QuadrantPlot from './QuadrantPlot';
 import { QuadChip } from './DetailPanel';
-import { seqOrange } from '@/lib/colors';
+import PageIntro from './PageIntro';
+import { diverging, seqOrange } from '@/lib/colors';
 import { QUADRANT_INFO, f1, f2, type Result } from '@/lib/indices';
 import { NO_SHOCK, runStress, type Shock } from '@/lib/stress';
 
@@ -24,8 +25,12 @@ function Slider({ label, value, min, max, unit, onChange }: { label: string; val
   );
 }
 
-export default function StressTest({ base, features, selected, onSelect, dark }: {
-  base: Result; features: Feat[]; selected: number; onSelect: (k: number) => void; dark: boolean;
+// Provinsi yang tidak terdampak tetap diberi warna netral (bukan oranye sangat pucat)
+// dan ramp dimulai dari 0,18 agar dampak kecil pun terlihat.
+const ZERO = 0.005;
+
+export default function StressTest({ base, features, mapStatus, onRetry, selected, onSelect, dark }: {
+  base: Result; features: Feat[]; mapStatus: MapStatus; onRetry: () => void; selected: number; onSelect: (k: number) => void; dark: boolean;
 }) {
   const [s, setS] = useState<Shock>(PRESETS[3].s);
   const rows = useMemo(() => runStress(base, s), [base, s]);
@@ -37,9 +42,22 @@ export default function StressTest({ base, features, selected, onSelect, dark }:
   const none = rows.every((r) => r.dRisk < 1e-6);
 
   return (
+    <div className="page">
+      <PageIntro
+        kicker="Halaman 3 · Simulasi guncangan"
+        title="Simulasi guncangan (stress test)"
+        lead={<>Halaman ini menjawab pertanyaan <i>“bagaimana jika…?”</i>: bila terjadi guncangan tertentu, provinsi mana yang paling terpukul dan apakah posisinya bergeser ke kuadran yang lebih buruk. <b>Guncangan</b> di sini adalah <b>guncangan eksternal</b> (<i>exogenous shocks</i>) dalam pengertian Briguglio: kejadian dari luar yang tidak bisa dikendalikan pemerintah daerah. Indeks EVI dan ERI hanya mengukur paparan dan kemampuan menghadapi guncangan secara umum. Halaman ini adalah <b>perluasan</b> yang menerjemahkannya ke skenario konkret.</>}
+        points={[
+          { title: 'Guncangan harga komoditas', body: 'Turunnya harga nikel, CPO (sawit), atau batubara di pasar dunia. Memukul PDRB provinsi yang ekspornya terkonsentrasi pada komoditas tersebut (paparan konsentrasi ekspor), lalu menular ke APBD lewat Dana Bagi Hasil (DBH) SDA, sehingga ruang fiskal untuk melawan guncangan ikut menyempit.' },
+          { title: 'Guncangan iklim (El Niño)', body: 'Kemarau panjang yang menurunkan produksi pertanian dan menaikkan harga pangan. Ini wujud kerawanan bencana alam, salah satu komponen kerentanan, dan paling terasa di provinsi yang bergantung pada pertanian.' },
+          { title: 'Gangguan logistik antarpulau', body: 'Terhambatnya pengiriman barang antarpulau (cuaca buruk, gangguan pelabuhan). Menekan provinsi yang bergantung pada pasokan pangan dari luar, padanan provinsi dari “ketergantungan impor strategis”.' },
+          { title: 'Cara membaca hasil', body: <>Peta menunjukkan besarnya <b>kenaikan risiko</b> tiap provinsi. Matriks memperlihatkan arah perpindahan dari posisi awal. Tabel merinci jalur dampaknya: PDRB, pendapatan APBD, dan tekanan pangan.</> },
+        ]}
+      />
     <div className="stress">
       <section className="card controls-card">
         <h2>Skenario guncangan</h2>
+        <p className="note">Pilih skenario siap pakai, atau geser pengatur untuk menyusun guncangan sendiri. Angka negatif pada harga berarti harga turun.</p>
         <div className="presets">
           {PRESETS.map((p) => (
             <button key={p.label} className="btn" onClick={() => setS(p.s)}>{p.label}</button>
@@ -70,17 +88,35 @@ export default function StressTest({ base, features, selected, onSelect, dark }:
             selected={selected}
             onSelect={onSelect}
             nameOf={(k) => byKode.get(k)?.nama ?? ''}
-            fill={(k) => seqOrange(Math.min(1, (byKode.get(k)?.dRisk ?? 0) / maxD) * (none ? 0 : 1), dark)}
+            status={mapStatus}
+            onRetry={onRetry}
+            fill={(k) => {
+              const r = byKode.get(k);
+              if (!r) return 'var(--map-nodata)';
+              if (none) return diverging(r.riskBase / 0.6, dark);
+              if (r.dRisk < ZERO) return 'var(--map-zero)';
+              return seqOrange(0.18 + 0.82 * Math.min(1, r.dRisk / maxD), dark);
+            }}
             tip={(k) => {
-              const r = byKode.get(k)!;
-              return (<><b>{r.nama}</b><div>Δ risiko: +{f2(r.dRisk)}</div><div>{QUADRANT_INFO[r.qBase].nama} → {QUADRANT_INFO[r.qAfter].nama}</div></>);
+              const r = byKode.get(k);
+              if (!r) return null;
+              return none
+                ? (<><b>{r.nama}</b><div>Risiko awal {r.riskBase > 0 ? '+' : ''}{f2(r.riskBase)}</div><div>{QUADRANT_INFO[r.qBase].nama}</div></>)
+                : (<><b>{r.nama}</b><div>Δ risiko: {r.dRisk < ZERO ? 'tidak terdampak' : '+' + f2(r.dRisk)}</div><div>{QUADRANT_INFO[r.qBase].nama} → {QUADRANT_INFO[r.qAfter].nama}</div></>);
             }}
           />
-          <div className="legend-seq">
-            <span>Tidak berubah</span>
-            <i style={{ background: `linear-gradient(90deg, ${seqOrange(0, dark)}, ${seqOrange(0.5, dark)}, ${seqOrange(1, dark)})` }} />
-            <span>Kenaikan risiko +{f2(maxD)}</span>
-          </div>
+          {none ? (
+            <div className="legend-seq"><span>Belum ada guncangan, peta menampilkan risiko awal:</span>
+              <span>rendah</span>
+              <i style={{ background: `linear-gradient(90deg, ${diverging(-1, dark)}, ${diverging(0, dark)}, ${diverging(1, dark)})` }} />
+              <span>tinggi</span></div>
+          ) : (
+            <div className="legend-seq">
+              <span className="swatch" style={{ background: 'var(--map-zero)' }} /><span>Tidak terdampak</span>
+              <i style={{ background: `linear-gradient(90deg, ${seqOrange(0.18, dark)}, ${seqOrange(0.6, dark)}, ${seqOrange(1, dark)})` }} />
+              <span>Kenaikan risiko +{f2(maxD)}</span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -122,6 +158,7 @@ export default function StressTest({ base, features, selected, onSelect, dark }:
           </table>
         </div>
       </section>
+    </div>
     </div>
   );
 }
