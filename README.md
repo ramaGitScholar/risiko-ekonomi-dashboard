@@ -1,4 +1,6 @@
-# Indeks Risiko Ekonomi Provinsi (prototipe)
+# VERA: Vulnerability & Economic Resilience Atlas (prototipe)
+
+Atlas kerentanan dan ketahanan ekonomi 34 provinsi Indonesia.
 
 Rujukan utama:
 

@@ -57,7 +57,7 @@ export default function Overview({ res, dark, onPick }: {
     <div className="page">
       <PageIntro
         kicker="Halaman 1 · Ringkasan"
-        title="Ringkasan dan profil dasbor"
+        title="Ringkasan dan profil VERA"
         lead={<>Gambaran umum risiko ekonomi 34 provinsi dalam satu layar: definisi yang dipakai, kartu skor, sebaran provinsi per kuadran, profil dasbor, serta rujukan metodologinya. Kerangka dan definisinya mengikuti Briguglio dkk. (2008) dan Briguglio (2016). Mulai dari sini sebelum masuk ke peta dan simulasi.</>}
         points={[
           { title: 'Apa yang diukur', body: 'Risiko suatu perekonomian dirugikan oleh guncangan eksternal, yaitu pertemuan antara seberapa terpapar strukturnya (kerentanan) dan seberapa mampu kebijakannya menghadapi guncangan (ketahanan).' },
@@ -157,6 +157,7 @@ export default function Overview({ res, dark, onPick }: {
         <section className="card fit">
           <h2>Profil dasbor</h2>
           <dl className="profile fit-body">
+            <div><dt>Nama</dt><dd><b>VERA</b>, singkatan dari <i>Vulnerability &amp; Economic Resilience Atlas</i>: atlas kerentanan dan ketahanan ekonomi provinsi di Indonesia.</dd></div>
             <div><dt>Tujuan</dt><dd>Memetakan provinsi mana yang paling terpapar guncangan ekonomi dan seberapa jauh kebijakan daerah mampu meredamnya, sebagai bahan prioritas kebijakan dan peringatan dini.</dd></div>
             <div><dt>Cakupan</dt><dd>34 provinsi (batas wilayah sebelum pemekaran Papua 2022).</dd></div>
             <div><dt>Kerangka</dt><dd>Kerangka kerentanan–ketahanan (<i>V&amp;R framework</i>) Briguglio dkk. (2008) dalam versi revisi Briguglio (2016), diturunkan dari tingkat negara ke tingkat provinsi.</dd></div>

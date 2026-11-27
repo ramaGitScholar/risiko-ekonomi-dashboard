@@ -5,8 +5,8 @@ import './globals.css';
 import { THEME_INIT } from '@/lib/theme';
 
 export const metadata: Metadata = {
-  title: 'Indeks Risiko Ekonomi Provinsi',
-  description: 'Prototipe dasbor risiko ekonomi 34 provinsi berbasis kerangka kerentanan dan ketahanan Briguglio.',
+  title: 'VERA · Vulnerability & Economic Resilience Atlas',
+  description: 'VERA: prototipe atlas risiko ekonomi 34 provinsi Indonesia berbasis kerangka kerentanan dan ketahanan Briguglio.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

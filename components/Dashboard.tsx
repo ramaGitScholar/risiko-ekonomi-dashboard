@@ -85,8 +85,8 @@ export default function Dashboard() {
             <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="currentColor" /></svg>
           </span>
           <div>
-            <b>Indeks Risiko Ekonomi</b>
-            <span>Provinsi Indonesia</span>
+            <b className="brand-name">VERA</b>
+            <span>Vulnerability &amp; Economic Resilience Atlas</span>
           </div>
         </a>
         <nav className="side-nav" aria-label="Halaman">
